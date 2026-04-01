@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, effect, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
@@ -10,8 +10,6 @@ import { Movie } from '../../models/movie.model';
   imports: [CommonModule, MatCardModule, MatButtonModule],
   template: `
     <div class="container mx-auto p-4">
-      <h1 class="text-3xl font-bold mb-6 text-center">Movie Collection</h1>
-      
       @if (loading()) {
         <div class="flex justify-center items-center h-64">
           <p class="text-xl">Loading movies...</p>
@@ -22,7 +20,7 @@ import { Movie } from '../../models/movie.model';
           <span class="block sm:inline"> {{ error() }}</span>
         </div>
       } @else {
-        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4   lg:grid-cols-8 gap-6">
           @for (movie of movies(); track movie.id) {
             <mat-card class="flex flex-col h-full hover:shadow-lg transition-shadow duration-300">
               <img mat-card-image 
@@ -42,7 +40,7 @@ import { Movie } from '../../models/movie.model';
                   }
                 </div>
                 <p class="text-sm text-gray-600 line-clamp-2">
-                  <strong>Director:</strong> {{ movie.directors.join(', ') }}
+                  <strong>Director:</strong> {{ movie.directors.join(', ')}}
                 </p>
               </mat-card-content>
 
@@ -55,7 +53,7 @@ import { Movie } from '../../models/movie.model';
 
         @if (movies().length === 0) {
           <div class="text-center py-10">
-            <p class="text-gray-500 italic">No movies found in the database.</p>
+            <p class="text-gray-500 italic">No movies found.</p>
           </div>
         }
       }
@@ -76,16 +74,25 @@ export class MovieListComponent implements OnInit {
   loading = signal(true);
   error = signal<string | null>(null);
 
-  ngOnInit(): void {
-    this.loadMovies();
+  constructor() {
+    // Automatically reload movies when the search query changes
+    effect(() => {
+      const query = this.movieService.searchQuery();
+      this.loadMovies(query);
+    });
   }
 
-  loadMovies(): void {
+  ngOnInit(): void {
+    // Handled by effect
+  }
+
+  loadMovies(query?: string): void {
     this.loading.set(true);
-    this.movieService.getMovies().subscribe({
+    this.movieService.getMovies(query).subscribe({
       next: (data) => {
         this.movies.set(data);
         this.loading.set(false);
+        this.error.set(null);
       },
       error: (err) => {
         console.error('Error fetching movies:', err);

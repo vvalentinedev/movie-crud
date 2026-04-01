@@ -9,6 +9,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/movies")
+@CrossOrigin(origins = "http://localhost:4200")
 public class MovieController {
     private final MovieService movieService;
 
@@ -27,7 +28,7 @@ public class MovieController {
     }
 
     @GetMapping("/{ID}")
-    public ResponseEntity<MovieDTO> getById(@PathVariable Long ID) {
+    public ResponseEntity<MovieDTO> getById(@PathVariable Integer ID) {
         return ResponseEntity.ok(movieService.getMovieById(ID));
     }
 

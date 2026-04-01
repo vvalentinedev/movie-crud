@@ -1,8 +1,10 @@
-import { Component } from '@angular/core';
+import { Component, inject, OnDestroy } from '@angular/core';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatIcon } from '@angular/material/icon';
 import { FormsModule } from '@angular/forms';
+import { MovieService } from '../../services/movie.service';
+import { debounceTime, Subject, takeUntil } from 'rxjs';
 
 @Component({
   selector: 'app-header-actions',
@@ -11,7 +13,7 @@ import { FormsModule } from '@angular/forms';
     <div class="flex items-center">
       <mat-form-field appearance="outline" class="search-bar no-subscript-wrapper">
         <mat-icon matPrefix class="mr-2">search</mat-icon>
-        <input matInput placeholder="Search movies..." [(ngModel)]="searchQuery">
+        <input matInput placeholder="Search movies..." [(ngModel)]="searchQuery" (ngModelChange)="onSearchChange($event)">
       </mat-form-field>
     </div>
   `,
@@ -57,6 +59,28 @@ import { FormsModule } from '@angular/forms';
     }
   `],
 })
-export class HeaderActions {
+export class HeaderActions implements OnDestroy {
+  private readonly movieService = inject(MovieService);
+  private readonly searchSubject = new Subject<string>();
+  private readonly destroy$ = new Subject<void>();
+  
   searchQuery = '';
+
+  constructor() {
+    this.searchSubject.pipe(
+      debounceTime(300),
+      takeUntil(this.destroy$)
+    ).subscribe(query => {
+      this.movieService.setSearchQuery(query);
+    });
+  }
+
+  onSearchChange(query: string): void {
+    this.searchSubject.next(query);
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
 }

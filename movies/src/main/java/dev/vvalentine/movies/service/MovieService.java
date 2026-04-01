@@ -17,14 +17,14 @@ public class MovieService {
         this.movieRepository = movieRepository;
     }
 
-    public MovieDTO getMovieById(Long ID) {
+    public MovieDTO getMovieById(Integer ID) {
         Movie movie = movieRepository.findById(ID)
                 .orElseThrow(() -> new RuntimeException("Movie not found with ID " + ID));
         return MovieMapper.toDTO(movie);
     }
 
     public List<MovieDTO> getMovieByTitle(String title) {
-        return movieRepository.findByTitle(title)
+        return movieRepository.findByTitleContainingIgnoreCase(title)
                 .stream()
                 .map(MovieMapper::toDTO)
                 .collect(Collectors.toList());
