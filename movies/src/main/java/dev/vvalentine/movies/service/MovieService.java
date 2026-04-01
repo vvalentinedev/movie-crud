@@ -24,7 +24,7 @@ public class MovieService {
     }
 
     public List<MovieDTO> getMovieByTitle(String title) {
-        return movieRepository.findByTitleContainingIgnoreCase(title)
+        return movieRepository.searchInclusive(title)
                 .stream()
                 .map(MovieMapper::toDTO)
                 .collect(Collectors.toList());
